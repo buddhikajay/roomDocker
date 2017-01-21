@@ -1,0 +1,33 @@
+version: '2'
+
+services:
+    kurento:
+        image: kurento/kurento-media-server
+        ports:
+            - 8888:8888
+        environment:
+            KMS_TURN_URL : coturn
+            KMS_STUN_IP: stun:stun.l.google.com
+            KMS_STUN_PORT: 19302
+    room:
+        build: kurento-room-demo
+        ports:
+            - 8443:8443
+        links:
+            - kurento
+        depends_on:
+            - kurento
+    coturn:
+        build: docker-turnserver
+        container_name: room_coturn
+        ports:
+            - "3478:3478/udp" # STUN/TURN UDP
+            - "3478:3478/tcp" # STUN/TURN TCP
+            - "3479:3479/udp" # STUN/TURN UDP Alt port (RFC5780 support)
+            - "3479:3479/tcp" # STUN/TURN TCP Alt port (RFC5780 support)
+            - "5349:5349/udp" # STUN/TURN DTLS
+            - "5349:5349/tcp" # STUN/TURN TLS
+            - "5350:5350/udp" # STUN/TURN DTLS Alt port (RFC5780 support)
+            - "5350:5350/tcp" # STUN/TURN TLS Alt port (RFC5780 support)
+            - "49152:65535/udp" # UDP media ports for TURN relay
+        restart: always
